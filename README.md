@@ -8,11 +8,11 @@
 ```
 git clone https://github.com/AmirHosseinCV/PdfSearcher.git
 cd PdfSearcher
-pip install -r requirements.txt
+pip install --prefer-binary -r requirements.txt
 ```
 if you want to generate JSON files on your system, run this command, too:
 ```
-pip install -r additional_packages.txt
+pip install --prefer-binary -r additional_packages.txt
 ```
 # Usage
 First, you should prepare a JSON file from your PDF using the `convert.py` script.
