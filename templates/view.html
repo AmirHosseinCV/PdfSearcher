@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles.css') }}" />
+</head>
+<body style="text-align: center; margin-top: 100px">
+    {% include 'searchbox.html' %}
+    <embed src="/pdf#page={{ page }}" style="width: 100%; height: calc(100vh - 100px)">
+</body>
+</html>

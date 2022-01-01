@@ -1,0 +1,81 @@
+@import url('https://cdn.fontcdn.ir/Font/Persian/Vazir/Vazir.css');
+body {
+    direction: rtl;
+    margin: auto;
+    background: #4e4e4e;
+    color: #fff;
+    font-family: Vazir;
+    overflow-x: hidden;
+}
+* {
+    font-family: Vazir;
+}
+a {
+    padding: 10px;
+    border: 3px solid #414141;
+    text-decoration: none;
+    display: block;
+    color: #fff !important;
+    margin: 10px;
+}
+#back {
+    display: block;
+    color: #fff !important;
+    text-decoration: none;
+    font-size: 1.3rem;
+    padding-top: 10px;
+    border: none;
+}
+#search {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+    background: #3c3c3c;
+    box-shadow: 0 3px 5px rgba(57, 63, 72, 0.3);
+}
+#search form{
+    display: block;
+    max-width: 800px;
+    margin: auto;
+}
+#search input{
+    width: calc(100% - 120px);
+    padding: 10px;
+}
+#search input, #search button{
+    background: #4e4e4e;
+    color: #fff;
+    border: none;
+    outline: none;
+    box-sizing: border-box;
+}
+#search input:focus{
+    background: #2e2e2e;
+    border: 1px solid #fff;
+}
+#search button:hover{
+    background: #2e2e2e;
+}
+#search button{
+    vertical-align: middle;
+    padding: 10px 20px;
+    cursor: pointer;
+    width: 90px;
+}
+.m{
+    border: 3px solid #28b097;;
+}
+a b {
+    background: #28b097;
+    padding: 2px;
+    border-radius: 5px;
+}
+
+img {
+    width:45%;
+    min-width: 650px;
+    max-width: 100% !important;
+}

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Results</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles.css') }}" />
+</head>
+<body style="margin-top: 100px; max-width: 800px;">
+{% include 'searchbox.html' %}
+<a id="back" href="/search">صفحه اصلی</a>
+{% for result in results %}
+<a href="/view?page={{ result[3] }}">{{ result[1]|safe }}</a>
+{% endfor %}
+</body>
+</html>
