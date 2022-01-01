@@ -3,6 +3,7 @@ tqdm~=4.61.2
 PersianStemmer~=1.0.0
 numpy~=1.19.3
 scikit-learn~=0.24.2
+rank-bm25
 joblib~=1.0.1
 requests~=2.25.1
 loguru~=0.5.3
