@@ -1,13 +1,17 @@
 from pathlib import Path
 from search import TFIDF, BM25
 import flask
-import json
 import argparse
 from loguru import logger
+import pandas as pd
+import utils
+import fitz
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--pdf", required=True, type=str, help="path to pdf file")
+parser.add_argument("--host", default="localhost", type=str)
+parser.add_argument("--port", default=8000, type=int)
 parser.add_argument("--lines", default=4, type=int, help="Split page to n-line parts (for search results)")
 parser.add_argument("--engine", default="tfidf", type=str,
                     help="Information Retrieval algorithm, can be \"tfidf\" or \"bm25\"")
@@ -26,10 +30,12 @@ else:
 
 
 pdf_file = Path(args.pdf)
-data_file = Path(args.pdf.replace(".pdf", ".json"))
-data = json.loads(data_file.read_text(encoding='utf8'))
+data_file = Path(args.pdf.replace(".pdf", ".csv"))
+pdf = fitz.open(str(pdf_file))
+data = pd.read_csv(str(data_file), sep="\t")
+text_data = utils.csv_to_text(data, sep="line_num")
 corpus = []
-for g, t in data.items():
+for g, t in text_data.items():
     lines = t.split("\n", maxsplit=-1)
     if len(lines) < LINES:
         corpus.append((" ".join(lines), g))
@@ -42,6 +48,11 @@ engine.feed(corpus)
 
 # Flask Application #######################################################################
 app = flask.Flask(__name__)
+
+
+@app.route("/")
+def main_page():
+    return flask.redirect("/search")
 
 
 @app.route("/search", methods=["GET", "POST"])
@@ -62,13 +73,43 @@ def home_search():
 @app.route("/view")
 def view():
     page = int(flask.request.values["page"])
-    return flask.render_template("view.html", page=page)
+    cdf = data[data['page_num'] == page]
+    words = utils.words_location(cdf, flask.request.values['query'], stemmer=engine.stemmer.run,
+                                 cleaner=engine.clear_text)
+    return flask.render_template("view.html", page=page, words=words,
+                                 from_page=max(0, page - 2), to_page=min(page + 2, pdf.page_count),
+                                 query=flask.request.values['query'])
 
 
 @app.route("/pdf")
 def view_pdf():
-    return flask.send_from_directory(pdf_file.parent, pdf_file.name)
+    from_page = int(flask.request.values['from'])
+    from_page = max(0, from_page)
+    to_page = int(flask.request.values['to'])
+    doc2: fitz.Document = fitz.open()
+    doc2.insert_pdf(pdf, from_page=from_page, to_page=to_page)
+    for page_num in range(doc2.page_count):
+        cdf = data[data['page_num'] == page_num + from_page + 1]
+        page: fitz.Page = doc2[page_num]
+        width, height = page.mediabox_size
+        words = utils.words_location(cdf, flask.request.values['query'],
+                                     stemmer=engine.stemmer.run,
+                                     cleaner=engine.clear_text)
+        for w in words:
+            x1, y1, w, h = w
+            x1 = int(x1 * width / 100)
+            y1 = int(y1 * height / 100)
+            x2 = x1 + int(w * width / 100)
+            y2 = y1 + int(h * height / 100)
+            page.add_highlight_annot(quads=fitz.Rect(x1, y1, x2, y2))
+
+    result_bytes = doc2.write()
+    response = flask.make_response(result_bytes)
+    response.headers['Content-type'] = "application/pdf"
+    response.headers["Content-Disposition"] = "inline"
+    response.headers["accept-ranges"] = "bytes"
+    return response
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, threaded=True)
+    app.run(host=args.host, port=args.port, threaded=True, debug=False)

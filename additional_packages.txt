@@ -1,3 +1,0 @@
-pdfplumber
-pytesseract
-pdf2image

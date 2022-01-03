@@ -7,6 +7,8 @@
 </head>
 <body style="text-align: center; margin-top: 100px">
     {% include 'searchbox.html' %}
-    <embed src="/pdf#page={{ page }}" style="width: 100%; height: calc(100vh - 100px)">
+    <embed src="/pdf?from={{ from_page }}&to={{ to_page }}&query={{ query }}#page={{ page - from_page }}"
+           type="application/pdf" style="width:100%; height: calc(100vh - 100px)">
+
 </body>
 </html>

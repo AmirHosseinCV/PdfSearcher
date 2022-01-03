@@ -7,3 +7,7 @@ rank-bm25
 joblib
 requests
 loguru
+pandas
+Pillow
+PyMuPDF
+pytesseract
