@@ -28,4 +28,4 @@ The PDF and CSV files must be in the same directory and have the same name.
 
 Replace `[PATH_TO_YOUR_PDF_FILE]` with the path to your pdf file! Use `python main.py --help` for more information.
 
-After that, you'll be able to open "https://localhost:8000/search" in your browser.
+After that, you'll be able to open "http://localhost:8000/search" in your browser.
