@@ -1,6 +1,6 @@
 from pathlib import Path
 from search import TFIDF, BM25
-import flask
+from flask import Flask, redirect, url_for, request, render_template, make_response
 import argparse
 from loguru import logger
 import pandas as pd
@@ -47,52 +47,52 @@ engine.feed(corpus)
 
 
 # Flask Application #######################################################################
-app = flask.Flask(__name__)
+app = Flask(__name__)
 
 
 @app.route("/")
 def main_page():
-    return flask.redirect("/search")
+    return redirect(url_for("home_search"))
 
 
 @app.route("/search", methods=["GET", "POST"])
 def home_search():
-    if 'query' in flask.request.values:
-        query = flask.request.values["query"]
+    if 'query' in request.values:
+        query = request.values["query"]
         stemmed_query = engine.stem(query)
         result = engine.find(query, n=int(args.num_results))
         for r in result:
             for q in set(r[1].split()):
                 if len(q) > 2 and engine.stemmer.run(q) in stemmed_query:
                     r[1] = r[1].replace(q, f"<b>{q}</b>")
-        return flask.render_template("results.html", results=result, ids=[r[2] for r in result],
+        return render_template("results.html", results=result, ids=[r[2] for r in result],
                                      query=query)
-    return flask.render_template("index.html")
+    return render_template("index.html")
 
 
 @app.route("/view")
 def view():
-    page = int(flask.request.values["page"])
+    page = int(request.values["page"])
     cdf = data[data['page_num'] == page]
-    words = utils.words_location(cdf, flask.request.values['query'], stemmer=engine.stemmer.run,
+    words = utils.words_location(cdf, request.values['query'], stemmer=engine.stemmer.run,
                                  cleaner=engine.clear_text)
-    return flask.render_template("view.html", page=page, words=words,
+    return render_template("view.html", page=page, words=words,
                                  from_page=max(0, page - 2), to_page=min(page + 2, pdf.page_count),
-                                 query=flask.request.values['query'])
+                                 query=request.values['query'])
 
 
 @app.route("/pdf")
 def view_pdf():
-    from_page = int(flask.request.values['from'])
+    from_page = int(request.values['from'])
     from_page = max(0, from_page)
-    to_page = int(flask.request.values['to'])
+    to_page = int(request.values['to'])
     doc2: fitz.Document = fitz.open()
     doc2.insert_pdf(pdf, from_page=from_page, to_page=to_page)
     for page_num in range(doc2.page_count):
         cdf = data[data['page_num'] == page_num + from_page + 1]
         page: fitz.Page = doc2[page_num]
         width, height = page.mediabox_size
-        words = utils.words_location(cdf, flask.request.values['query'],
+        words = utils.words_location(cdf, request.values['query'],
                                      stemmer=engine.stemmer.run,
                                      cleaner=engine.clear_text)
         for w in words:
@@ -104,7 +104,7 @@ def view_pdf():
             page.add_highlight_annot(quads=fitz.Rect(x1, y1, x2, y2))
 
     result_bytes = doc2.write()
-    response = flask.make_response(result_bytes)
+    response = make_response(result_bytes)
     response.headers['Content-type'] = "application/pdf"
     response.headers["Content-Disposition"] = "inline"
     response.headers["accept-ranges"] = "bytes"
