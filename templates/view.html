@@ -7,8 +7,27 @@
 </head>
 <body style="text-align: center; margin-top: 100px">
     {% include 'searchbox.html' %}
-    <embed src="/pdf?from={{ from_page }}&to={{ to_page }}&query={{ query }}#page={{ page - from_page }}"
-           type="application/pdf" style="width:100%; height: calc(100vh - 100px)">
 
+    <embed src="/pdf?from={{ from_page }}&to={{ to_page }}&query={{ query }}#page={{ page - from_page }}"
+           type="application/pdf" style="width:100%; height: calc(100vh - 100px)" id="pdf">
+    
+    <div style="position: fixed; right: 20px; bottom: 10px;">
+        <button onclick="reload()" style="cursor: pointer;">reload</button>
+        <button onclick="view_full()" style="cursor: pointer;">load all pages</button>
+    </div>
+    
+    <script>
+        function reload(){
+            var pdf = document.getElementById("pdf");
+            var clone = pdf.cloneNode(true);
+            pdf.parentNode.replaceChild(clone, pdf)
+        }
+        function view_full(){
+            var pdf = document.getElementById("pdf");
+            var clone = pdf.cloneNode(true);
+            clone.src = "/pdf#page={{ page }}"
+            pdf.parentNode.replaceChild(clone, pdf)
+        }
+    </script>
 </body>
 </html>

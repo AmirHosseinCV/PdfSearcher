@@ -12,11 +12,16 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--pdf", required=True, type=str, help="path to pdf file")
 parser.add_argument("--host", default="localhost", type=str)
 parser.add_argument("--port", default=8000, type=int)
+parser.add_argument("--margin", default=[1, 5], nargs="+", type=int)
 parser.add_argument("--lines", default=4, type=int, help="Split page to n-line parts (for search results)")
 parser.add_argument("--engine", default="tfidf", type=str,
                     help="Information Retrieval algorithm, can be \"tfidf\" or \"bm25\"")
 parser.add_argument("--num-results", default=10, type=int, help="number of results to show")
 args = parser.parse_args()
+
+if len(args.margin) == 1:
+    args.margin *= 2
+
 
 LINES = args.lines
 engine = None
@@ -77,33 +82,37 @@ def view():
     words = utils.words_location(cdf, flask.request.values['query'], stemmer=engine.stemmer.run,
                                  cleaner=engine.clear_text)
     return flask.render_template("view.html", page=page, words=words,
-                                 from_page=max(0, page - 2), to_page=min(page + 2, pdf.page_count),
+                                 from_page=max(0, page - args.margin[0] - 1),
+                                 to_page=min(page + args.margin[1] - 1, pdf.page_count),
                                  query=flask.request.values['query'])
 
 
 @app.route("/pdf")
 def view_pdf():
-    from_page = int(flask.request.values['from'])
-    from_page = max(0, from_page)
-    to_page = int(flask.request.values['to'])
-    doc2: fitz.Document = fitz.open()
-    doc2.insert_pdf(pdf, from_page=from_page, to_page=to_page)
-    for page_num in range(doc2.page_count):
-        cdf = data[data['page_num'] == page_num + from_page + 1]
-        page: fitz.Page = doc2[page_num]
-        width, height = page.mediabox_size
-        words = utils.words_location(cdf, flask.request.values['query'],
-                                     stemmer=engine.stemmer.run,
-                                     cleaner=engine.clear_text)
-        for w in words:
-            x1, y1, w, h = w
-            x1 = int(x1 * width / 100)
-            y1 = int(y1 * height / 100)
-            x2 = x1 + int(w * width / 100)
-            y2 = y1 + int(h * height / 100)
-            page.add_highlight_annot(quads=fitz.Rect(x1, y1, x2, y2))
+    if 'from' in flask.request.values:
+        from_page = int(flask.request.values['from'])
+        from_page = max(0, from_page)
+        to_page = int(flask.request.values['to'])
+        doc2: fitz.Document = fitz.open()
+        doc2.insert_pdf(pdf, from_page=from_page, to_page=to_page)
+        for page_num in range(doc2.page_count):
+            cdf = data[data['page_num'] == page_num + from_page + 1]
+            page: fitz.Page = doc2[page_num]
+            width, height = page.mediabox_size
+            words = utils.words_location(cdf, flask.request.values['query'],
+                                         stemmer=engine.stemmer.run,
+                                         cleaner=engine.clear_text)
+            for w in words:
+                x1, y1, w, h = w
+                x1 = int(x1 * width / 100)
+                y1 = int(y1 * height / 100)
+                x2 = x1 + int(w * width / 100)
+                y2 = y1 + int(h * height / 100)
+                page.add_highlight_annot(quads=fitz.Rect(x1, y1, x2, y2))
 
-    result_bytes = doc2.write()
+        result_bytes = doc2.write()
+    else:
+        result_bytes = pdf.write()
     response = flask.make_response(result_bytes)
     response.headers['Content-type'] = "application/pdf"
     response.headers["Content-Disposition"] = "inline"
