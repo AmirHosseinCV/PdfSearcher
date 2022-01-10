@@ -57,7 +57,7 @@ app = flask.Flask(__name__)
 
 @app.route("/")
 def main_page():
-    return flask.redirect("/search")
+    return flask.redirect(flask.url_for("home_search"))
 
 
 @app.route("/search", methods=["GET", "POST"])
