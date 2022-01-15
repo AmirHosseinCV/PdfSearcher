@@ -108,7 +108,10 @@ def view_pdf():
                 y1 = int(y1 * height / 100)
                 x2 = x1 + int(w * width / 100)
                 y2 = y1 + int(h * height / 100)
-                page.add_highlight_annot(quads=fitz.Rect(x1, y1, x2, y2))
+                try:
+                    page.add_highlight_annot(quads=fitz.Rect(x1, y1, x2, y2))
+                except Exception as e:
+                    logger.error(str(e))
 
         result_bytes = doc2.write()
     else:
